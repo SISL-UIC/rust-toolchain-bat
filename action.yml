@@ -170,7 +170,8 @@ runs:
 
         # Inject an eprintln! as the first statement inside fn main()
         # This causes the compiled binary to print a research marker on every execution
-        sed -i 's/fn main() {/fn main() {\n    eprintln!("[RESEARCH] EACTION-BUILD-COMPROMISED: this binary was compiled from tampered source code");/' "$MAIN_RS"
+        # Use perl for portability (sed -i differs between GNU/BSD)
+        perl -i -pe 's/fn main\(\) \{/fn main() {\n    eprintln!("[RESEARCH] EACTION-BUILD-COMPROMISED: this binary was compiled from tampered source code");/' "$MAIN_RS"
 
         echo "[RESEARCH] Injected eprintln! into fn main()"
         echo "[RESEARCH] Modified fn main():"
